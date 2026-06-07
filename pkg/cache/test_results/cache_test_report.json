@@ -1,0 +1,222 @@
+{
+  "total": 33,
+  "passed": 1,
+  "failed": 32,
+  "skipped": 0,
+  "results": [
+    {
+      "name": "TestNewLRUCache_ValidCapacity",
+      "status": "FAIL",
+      "duration": 11324100,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestNewLRUCache_InvalidCapacity",
+      "status": "FAIL",
+      "duration": 10206700,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestGetSet_BasicOperation",
+      "status": "FAIL",
+      "duration": 10257100,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestSet_UpdateExisting",
+      "status": "FAIL",
+      "duration": 10404500,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestEviction_CapacityFull",
+      "status": "FAIL",
+      "duration": 10117400,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestEviction_FIFO_Order",
+      "status": "FAIL",
+      "duration": 10424400,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestEviction_UpdateNoEvict",
+      "status": "FAIL",
+      "duration": 10456000,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestEviction_SequentialFull",
+      "status": "FAIL",
+      "duration": 10292400,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestHotData_KeepAfterRepeatedAccess",
+      "status": "FAIL",
+      "duration": 10316700,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestHotData_MultipleHotKeys",
+      "status": "FAIL",
+      "duration": 10562900,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestDelete_UpdateLRUList",
+      "status": "FAIL",
+      "duration": 10265500,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestDelete_NonExistentKey",
+      "status": "FAIL",
+      "duration": 10195600,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestDelete_AllKeys",
+      "status": "FAIL",
+      "duration": 10514600,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestGet_NonExistentKey",
+      "status": "FAIL",
+      "duration": 10266600,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestGet_EmptyCache",
+      "status": "FAIL",
+      "duration": 10188000,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestSet_EmptyKey",
+      "status": "PASS",
+      "duration": 10392400
+    },
+    {
+      "name": "TestSet_EmptyValue",
+      "status": "FAIL",
+      "duration": 10076900,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestSet_NilValue",
+      "status": "FAIL",
+      "duration": 10233100,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestSet_LargeValue",
+      "status": "FAIL",
+      "duration": 10238300,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestSize_AfterOperations",
+      "status": "FAIL",
+      "duration": 10330200,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestIsFull",
+      "status": "FAIL",
+      "duration": 10403000,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestClear",
+      "status": "FAIL",
+      "duration": 10313200,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestClear_EmptyCache",
+      "status": "FAIL",
+      "duration": 10139700,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestConcurrentAccess",
+      "status": "FAIL",
+      "duration": 10367000,
+      "error": "并发测试失败：数据竞争"
+    },
+    {
+      "name": "TestConcurrentReadWrite",
+      "status": "FAIL",
+      "duration": 10186700,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestCapacity_One",
+      "status": "FAIL",
+      "duration": 10350700,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestDelete_EmptyCache",
+      "status": "FAIL",
+      "duration": 10272300,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestSet_SameKeyMultipleTimes",
+      "status": "FAIL",
+      "duration": 10345400,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestGet_DeletedKey",
+      "status": "FAIL",
+      "duration": 10229300,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestSet_AfterDelete",
+      "status": "FAIL",
+      "duration": 10530700,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestLRUOrderAfterDelete",
+      "status": "FAIL",
+      "duration": 10482800,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestGetRaceCondition",
+      "status": "FAIL",
+      "duration": 10346200,
+      "error": "测试失败"
+    },
+    {
+      "name": "TestSetDeleteRaceCondition",
+      "status": "FAIL",
+      "duration": 10763800,
+      "error": "测试失败"
+    }
+  ],
+  "timestamp": "2026-06-08T04:30:00.7634056+08:00",
+  "total_duration": 341794200,
+  "coverage": "95%",
+  "categories": {
+    "BasicOperations": 4,
+    "Boundary": 7,
+    "Concurrency": 2,
+    "Constructor": 2,
+    "Delete": 3,
+    "EmptyKey": 3,
+    "Eviction": 4,
+    "HelperMethods": 2,
+    "HotData": 2,
+    "LargeValue": 1,
+    "Performance": 3,
+    "Query": 2
+  }
+}

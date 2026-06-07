@@ -33,10 +33,10 @@ type cacheEntry struct {
 // 使用双向链表维护访问顺序（头部=最近使用，尾部=最久未使用）
 // 使用哈希表实现O(1)的Key查找
 type LRUCache struct {
-	capacity int                       // 最大缓存条目数
-	list     *list.List                // container/list 双向链表
-	cache    map[string]*list.Element  // 哈希表：Key → 链表节点指针
-	mu       sync.RWMutex              // 读写锁保护并发访问
+	capacity int                      // 最大缓存条目数
+	list     *list.List               // container/list 双向链表
+	cache    map[string]*list.Element // 哈希表：Key → 链表节点指针
+	mu       sync.RWMutex             // 读写锁保护并发访问
 }
 
 // ============ 构造函数 ============
@@ -150,4 +150,25 @@ func (c *LRUCache) Clear() error {
 	c.list.Init()
 	c.cache = make(map[string]*list.Element)
 	return nil
+}
+
+// ExportAll 导出缓存中所有键值对
+// 返回 keys 和 values 两个切片，顺序与链表顺序一致（从最近访问到最久访问）
+// 对 value 进行深拷贝，避免外部修改影响缓存内部数据
+// 使用读锁，支持并发读取
+func (c *LRUCache) ExportAll() (keys []string, values [][]byte) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	keys = make([]string, 0, c.list.Len())
+	values = make([][]byte, 0, c.list.Len())
+
+	for e := c.list.Front(); e != nil; e = e.Next() {
+		entry := e.Value.(*cacheEntry)
+		keys = append(keys, entry.key)
+		valCopy := make([]byte, len(entry.value))
+		copy(valCopy, entry.value)
+		values = append(values, valCopy)
+	}
+	return
 }

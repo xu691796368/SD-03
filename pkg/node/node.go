@@ -260,6 +260,24 @@ func (n *CacheNode) SetMasterID(masterID string) {
 	n.masterID = masterID
 }
 
+// ExportAll 导出节点中所有缓存数据
+// 返回所有键值对，用于主从复制全量同步
+// 若节点未初始化或已停止，返回错误
+func (n *CacheNode) ExportAll() (keys []string, values [][]byte, err error) {
+	n.mu.RLock()
+	defer n.mu.RUnlock()
+
+	if n.lru == nil {
+		return nil, nil, ErrNotInitialized
+	}
+	if n.status == StatusStopped {
+		return nil, nil, ErrNodeStopped
+	}
+
+	keys, values = n.lru.ExportAll()
+	return keys, values, nil
+}
+
 // ============ 生命周期管理 ============
 
 // Start 启动节点
