@@ -1,209 +1,177 @@
 {
   "total": 33,
-  "passed": 1,
-  "failed": 32,
+  "passed": 33,
+  "failed": 0,
   "skipped": 0,
   "results": [
     {
       "name": "TestNewLRUCache_ValidCapacity",
-      "status": "FAIL",
-      "duration": 11324100,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10403900
     },
     {
       "name": "TestNewLRUCache_InvalidCapacity",
-      "status": "FAIL",
-      "duration": 10206700,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10348700
     },
     {
       "name": "TestGetSet_BasicOperation",
-      "status": "FAIL",
-      "duration": 10257100,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10105500
     },
     {
       "name": "TestSet_UpdateExisting",
-      "status": "FAIL",
-      "duration": 10404500,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10455000
     },
     {
       "name": "TestEviction_CapacityFull",
-      "status": "FAIL",
-      "duration": 10117400,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10123700
     },
     {
       "name": "TestEviction_FIFO_Order",
-      "status": "FAIL",
-      "duration": 10424400,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10400900
     },
     {
       "name": "TestEviction_UpdateNoEvict",
-      "status": "FAIL",
-      "duration": 10456000,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10471100
     },
     {
       "name": "TestEviction_SequentialFull",
-      "status": "FAIL",
-      "duration": 10292400,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10202300
     },
     {
       "name": "TestHotData_KeepAfterRepeatedAccess",
-      "status": "FAIL",
-      "duration": 10316700,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10207800
     },
     {
       "name": "TestHotData_MultipleHotKeys",
-      "status": "FAIL",
-      "duration": 10562900,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10073200
     },
     {
       "name": "TestDelete_UpdateLRUList",
-      "status": "FAIL",
-      "duration": 10265500,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10165400
     },
     {
       "name": "TestDelete_NonExistentKey",
-      "status": "FAIL",
-      "duration": 10195600,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10386100
     },
     {
       "name": "TestDelete_AllKeys",
-      "status": "FAIL",
-      "duration": 10514600,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10304400
     },
     {
       "name": "TestGet_NonExistentKey",
-      "status": "FAIL",
-      "duration": 10266600,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10348800
     },
     {
       "name": "TestGet_EmptyCache",
-      "status": "FAIL",
-      "duration": 10188000,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10443500
     },
     {
       "name": "TestSet_EmptyKey",
       "status": "PASS",
-      "duration": 10392400
+      "duration": 10216200
     },
     {
       "name": "TestSet_EmptyValue",
-      "status": "FAIL",
-      "duration": 10076900,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10124300
     },
     {
       "name": "TestSet_NilValue",
-      "status": "FAIL",
-      "duration": 10233100,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10042800
     },
     {
       "name": "TestSet_LargeValue",
-      "status": "FAIL",
-      "duration": 10238300,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10362300
     },
     {
       "name": "TestSize_AfterOperations",
-      "status": "FAIL",
-      "duration": 10330200,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10353700
     },
     {
       "name": "TestIsFull",
-      "status": "FAIL",
-      "duration": 10403000,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10395100
     },
     {
       "name": "TestClear",
-      "status": "FAIL",
-      "duration": 10313200,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10144300
     },
     {
       "name": "TestClear_EmptyCache",
-      "status": "FAIL",
-      "duration": 10139700,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10140400
     },
     {
       "name": "TestConcurrentAccess",
-      "status": "FAIL",
-      "duration": 10367000,
-      "error": "并发测试失败：数据竞争"
+      "status": "PASS",
+      "duration": 10143500
     },
     {
       "name": "TestConcurrentReadWrite",
-      "status": "FAIL",
-      "duration": 10186700,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10223900
     },
     {
       "name": "TestCapacity_One",
-      "status": "FAIL",
-      "duration": 10350700,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10419500
     },
     {
       "name": "TestDelete_EmptyCache",
-      "status": "FAIL",
-      "duration": 10272300,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10082900
     },
     {
       "name": "TestSet_SameKeyMultipleTimes",
-      "status": "FAIL",
-      "duration": 10345400,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10342400
     },
     {
       "name": "TestGet_DeletedKey",
-      "status": "FAIL",
-      "duration": 10229300,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10312800
     },
     {
       "name": "TestSet_AfterDelete",
-      "status": "FAIL",
-      "duration": 10530700,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10274200
     },
     {
       "name": "TestLRUOrderAfterDelete",
-      "status": "FAIL",
-      "duration": 10482800,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10447700
     },
     {
       "name": "TestGetRaceCondition",
-      "status": "FAIL",
-      "duration": 10346200,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10131700
     },
     {
       "name": "TestSetDeleteRaceCondition",
-      "status": "FAIL",
-      "duration": 10763800,
-      "error": "测试失败"
+      "status": "PASS",
+      "duration": 10324200
     }
   ],
-  "timestamp": "2026-06-08T04:30:00.7634056+08:00",
-  "total_duration": 341794200,
+  "timestamp": "2026-06-09T05:22:51.3718208+08:00",
+  "total_duration": 338922200,
   "coverage": "95%",
   "categories": {
     "BasicOperations": 4,
