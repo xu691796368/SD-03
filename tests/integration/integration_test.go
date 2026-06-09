@@ -33,11 +33,11 @@ import (
 // testCluster 封装完整的测试集群组件
 // 包含哈希环、缓存节点、TCP服务器、主从复制控制器
 type testCluster struct {
-	ring    *shard.HashRing
-	nodes   []*node.CacheNode
-	server  *server.TCPServer
-	rc      *replication.ReplicationController
-	address string // 服务器实际监听地址（随机端口）
+	ring    *shard.HashRing                    // 一致性哈希环
+	nodes   []*node.CacheNode                  // 缓存节点列表
+	server  *server.TCPServer                  // TCP 服务器
+	rc      *replication.ReplicationController // 主从复制控制器
+	address string                             // 服务器实际监听地址（随机端口）
 }
 
 // newTestCluster 创建并启动完整的测试集群
@@ -135,6 +135,7 @@ func (tc *testCluster) connect(t *testing.T) net.Conn {
 // 总计 = 10 + ValueLen 字节
 
 // sendRequest 发送协议请求并读取响应（用于主测试goroutine）
+// sendRequest 通过 TCP 连接发送协议请求并返回响应
 // 返回响应的 status code 和 value 数据
 func sendRequest(t *testing.T, conn net.Conn, cmd uint8, key, value []byte) (uint8, []byte) {
 	t.Helper()

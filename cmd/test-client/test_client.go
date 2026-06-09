@@ -59,40 +59,50 @@ func NewTestContext(name string) *TestContext {
 	return &TestContext{name: name}
 }
 
-func (tc *TestContext) Helper() {} // 兼容 testing.T.Helper()
+// Helper 标记当前函数为测试辅助函数（兼容 testing.T.Helper()）
+func (tc *TestContext) Helper() {}
 
+// Name 返回当前测试名称
 func (tc *TestContext) Name() string { return tc.name }
 
+// Fatalf 格式化输出错误信息并立即终止当前测试
 func (tc *TestContext) Fatalf(format string, args ...interface{}) {
 	tc.failed = true
 	panic(testPanic{message: fmt.Sprintf(format, args...)})
 }
 
+// Fatal 输出错误信息并立即终止当前测试
 func (tc *TestContext) Fatal(args ...interface{}) {
 	tc.failed = true
 	panic(testPanic{message: fmt.Sprint(args...)})
 }
 
+// Logf 格式化输出日志信息（不终止测试）
 func (tc *TestContext) Logf(format string, args ...interface{}) {
 	tc.logs = append(tc.logs, fmt.Sprintf(format, args...))
 }
 
+// Log 输出日志信息（不终止测试）
 func (tc *TestContext) Log(args ...interface{}) {
 	tc.logs = append(tc.logs, fmt.Sprint(args...))
 }
 
+// Errorf 格式化记录错误信息并标记测试失败（不终止测试）
 func (tc *TestContext) Errorf(format string, args ...interface{}) {
 	tc.errors = append(tc.errors, fmt.Sprintf(format, args...))
 	tc.failed = true
 }
 
+// Error 记录错误信息并标记测试失败（不终止测试）
 func (tc *TestContext) Error(args ...interface{}) {
 	tc.errors = append(tc.errors, fmt.Sprint(args...))
 	tc.failed = true
 }
 
+// Failed 返回当前测试是否已失败
 func (tc *TestContext) Failed() bool { return tc.failed }
 
+// FailNow 将当前测试标记为失败并立即终止
 func (tc *TestContext) FailNow() {
 	tc.failed = true
 	panic(testPanic{message: "FailNow"})
@@ -111,6 +121,7 @@ func (tc *TestContext) Run(name string, f func(t *TestContext)) bool {
 	return passed
 }
 
+// ErrorMessage 返回所有已记录的错误信息拼接字符串
 func (tc *TestContext) ErrorMessage() string {
 	if len(tc.errors) > 0 {
 		return strings.Join(tc.errors, "; ")
@@ -118,7 +129,10 @@ func (tc *TestContext) ErrorMessage() string {
 	return ""
 }
 
-func (tc *TestContext) LogMessages() []string           { return tc.logs }
+// LogMessages 返回所有已记录的日志消息
+func (tc *TestContext) LogMessages() []string { return tc.logs }
+
+// SubTestResults 返回所有子测试的执行结果
 func (tc *TestContext) SubTestResults() []SubTestResult { return tc.subTests }
 
 // runWithRecovery 带有 panic recovery 的测试执行器
@@ -181,6 +195,7 @@ type TestModule struct {
 // 断言辅助函数（与 TestContext 兼容）
 // ========================================================================
 
+// assertStatus 断言实际状态码等于期望的错误码，不匹配则终止测试
 func assertStatus(t *TestContext, actual uint8, expected protocol.ErrorCode, msg string) {
 	t.Helper()
 	if actual != uint8(expected) {
@@ -189,11 +204,13 @@ func assertStatus(t *TestContext, actual uint8, expected protocol.ErrorCode, msg
 	}
 }
 
+// assertSuccess 断言状态码为 SUCCESS
 func assertSuccess(t *TestContext, status uint8, msg string) {
 	t.Helper()
 	assertStatus(t, status, protocol.SUCCESS, msg)
 }
 
+// assertValue 断言实际字节数组等于期望的字符串值
 func assertValue(t *TestContext, actual []byte, expected string, msg string) {
 	t.Helper()
 	if string(actual) != expected {
@@ -201,6 +218,7 @@ func assertValue(t *TestContext, actual []byte, expected string, msg string) {
 	}
 }
 
+// assertEmptyValue 断言字节数组为空
 func assertEmptyValue(t *TestContext, actual []byte, msg string) {
 	t.Helper()
 	if len(actual) != 0 {
@@ -208,6 +226,7 @@ func assertEmptyValue(t *TestContext, actual []byte, msg string) {
 	}
 }
 
+// assertError 断言 error 不为 nil
 func assertError(t *TestContext, err error, msg string) {
 	t.Helper()
 	if err == nil {
@@ -215,6 +234,7 @@ func assertError(t *TestContext, err error, msg string) {
 	}
 }
 
+// assertNoError 断言 error 为 nil
 func assertNoError(t *TestContext, err error, msg string) {
 	t.Helper()
 	if err != nil {
@@ -222,6 +242,7 @@ func assertNoError(t *TestContext, err error, msg string) {
 	}
 }
 
+// assertEqual 断言两个可比较的值相等
 func assertEqual[T comparable](t *TestContext, actual, expected T, msg string) {
 	t.Helper()
 	if actual != expected {
@@ -229,6 +250,7 @@ func assertEqual[T comparable](t *TestContext, actual, expected T, msg string) {
 	}
 }
 
+// assertTrue 断言条件为 true
 func assertTrue(t *TestContext, condition bool, msg string) {
 	t.Helper()
 	if !condition {
@@ -236,6 +258,7 @@ func assertTrue(t *TestContext, condition bool, msg string) {
 	}
 }
 
+// assertFalse 断言条件为 false
 func assertFalse(t *TestContext, condition bool, msg string) {
 	t.Helper()
 	if condition {
@@ -548,7 +571,6 @@ func RunTestCase(name, category, module string, f TestCaseFunc) TestCaseResult {
 }
 
 // RunAndPrintResult 执行测试并打印结果
-// RunAndPrintResult 执行测试并打印结果
 func (cli *CLIClient) RunAndPrintResult(entry TestEntry, module string) TestCaseResult {
 	// 打印测试过程描述（优先使用 entry.Desc，否则从描述库查找）
 	desc := entry.Desc
@@ -760,6 +782,7 @@ func (cli *CLIClient) ShowSettingsMenu() {
 	fmt.Println("------------------------------------------------------------")
 }
 
+// filterByCategory 按测试分类过滤测试条目
 func filterByCategory(entries []TestEntry, category string) []TestEntry {
 	var result []TestEntry
 	for _, e := range entries {
@@ -774,6 +797,7 @@ func filterByCategory(entries []TestEntry, category string) []TestEntry {
 // 输入处理
 // ========================================================================
 
+// readInput 从标准输入读取一行并去除首尾空白
 func readInput(reader *bufio.Reader, prompt string) string {
 	fmt.Print(prompt)
 	line, _ := reader.ReadString('\n')

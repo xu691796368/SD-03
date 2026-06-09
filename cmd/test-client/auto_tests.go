@@ -93,6 +93,7 @@ func dialTest(t *TestContext, addr string) net.Conn {
 // 协议编解码测试（6 用例）
 // ========================================================================
 
+// buildProtocolTests 构建协议编解码模块的测试条目
 func buildProtocolTests() []TestEntry {
 	return []TestEntry{
 		{ID: "P01", Name: "请求编解码往返测试", Category: "正常", Func: testProtoEncodeDecodeReq},
@@ -104,6 +105,7 @@ func buildProtocolTests() []TestEntry {
 	}
 }
 
+// testProtoEncodeDecodeReq 测试请求编解码往返一致性
 func testProtoEncodeDecodeReq(t *TestContext) {
 	tests := []struct {
 		name  string
@@ -130,6 +132,7 @@ func testProtoEncodeDecodeReq(t *TestContext) {
 	}
 }
 
+// testProtoEncodeDecodeResp 测试响应编解码往返一致性
 func testProtoEncodeDecodeResp(t *TestContext) {
 	tests := []struct {
 		name   string
@@ -157,6 +160,7 @@ func testProtoEncodeDecodeResp(t *TestContext) {
 	}
 }
 
+// testProtoNewFrameCopy 测试帧创建与深拷贝
 func testProtoNewFrameCopy(t *TestContext) {
 	frame := protocol.NewFrame(uint8(protocol.CMD_SET), []byte("key"), []byte("value"))
 	assertEqual(t, frame.Command, uint8(protocol.CMD_SET), "Command")
@@ -177,6 +181,7 @@ func testProtoNewFrameCopy(t *TestContext) {
 	assertTrue(t, (*protocol.ProtocolFrame)(nil).Copy() == nil, "nil Copy")
 }
 
+// testProtoEncodeReqErrors 测试请求编码的参数校验（nil Key、超长 Key/Value）
 func testProtoEncodeReqErrors(t *TestContext) {
 	_, err := protocol.EncodeRequest(uint8(protocol.CMD_GET), nil, nil)
 	assertError(t, err, "nil key rejected")
@@ -190,6 +195,7 @@ func testProtoEncodeReqErrors(t *TestContext) {
 	assertError(t, err, "oversized value rejected")
 }
 
+// testProtoDecodeReqErrors 测试请求解码的参数校验（nil 数据、长度不足）
 func testProtoDecodeReqErrors(t *TestContext) {
 	_, err := protocol.DecodeRequest(nil)
 	assertError(t, err, "nil data rejected")
@@ -207,6 +213,7 @@ func testProtoDecodeReqErrors(t *TestContext) {
 	assertError(t, err, "data shorter than declared length")
 }
 
+// testProtoValidateFrame 测试协议帧校验与边界检查（非法命令、长度超限、长度不匹配）
 func testProtoValidateFrame(t *TestContext) {
 	validFrame := protocol.NewFrame(uint8(protocol.CMD_SET), []byte("key"), []byte("value"))
 	assertNoError(t, protocol.ValidateFrame(validFrame), "valid frame")
@@ -245,6 +252,7 @@ func testProtoValidateFrame(t *TestContext) {
 // LRU 缓存测试（8 用例）
 // ========================================================================
 
+// buildCacheTests 构建 LRU 缓存模块的测试条目
 func buildCacheTests() []TestEntry {
 	return []TestEntry{
 		{ID: "C01", Name: "LRU缓存构造函数", Category: "正常", Func: testCacheNewLRUCache},
@@ -258,6 +266,7 @@ func buildCacheTests() []TestEntry {
 	}
 }
 
+// testCacheNewLRUCache 测试 LRU 缓存创建（正常和异常场景）
 func testCacheNewLRUCache(t *TestContext) {
 	c, err := cache.NewLRUCache(100)
 	assertNoError(t, err, "NewLRUCache(100)")
@@ -271,6 +280,7 @@ func testCacheNewLRUCache(t *TestContext) {
 	assertError(t, err, "negative capacity")
 }
 
+// testCacheSetGetDelete 测试缓存基本 SET/GET/DELETE 操作
 func testCacheSetGetDelete(t *TestContext) {
 	c, _ := cache.NewLRUCache(10)
 	assertNoError(t, c.Set("key1", []byte("value1")), "SET key1")
@@ -291,6 +301,7 @@ func testCacheSetGetDelete(t *TestContext) {
 	assertFalse(t, ok, "GET after DELETE")
 }
 
+// testCacheUpdateValue 测试更新已存在 Key 的 Value
 func testCacheUpdateValue(t *TestContext) {
 	c, _ := cache.NewLRUCache(10)
 	c.Set("key", []byte("old"))
@@ -301,6 +312,7 @@ func testCacheUpdateValue(t *TestContext) {
 	assertEqual(t, c.Size(), 1, "size unchanged")
 }
 
+// testCacheExportAll 测试全量导出缓存数据
 func testCacheExportAll(t *TestContext) {
 	c, _ := cache.NewLRUCache(10)
 	for i := 0; i < 3; i++ {
@@ -323,6 +335,7 @@ func testCacheExportAll(t *TestContext) {
 	assertEqual(t, len(keys), 0, "empty after clear")
 }
 
+// testCacheEmptyKey 测试空 Key 的 SET 操作
 func testCacheEmptyKey(t *TestContext) {
 	c, _ := cache.NewLRUCache(10)
 	assertError(t, c.Set("", []byte("value")), "empty key rejected")
@@ -332,6 +345,7 @@ func testCacheEmptyKey(t *TestContext) {
 	assertEqual(t, len(val), 0, "value is empty")
 }
 
+// testCacheEviction 测试 LRU 缓存满时的淘汰机制
 func testCacheEviction(t *TestContext) {
 	c, _ := cache.NewLRUCache(5)
 	for i := 0; i < 5; i++ {
@@ -351,6 +365,7 @@ func testCacheEviction(t *TestContext) {
 	assertEqual(t, string(val), "val-5", "key-5 value")
 }
 
+// testCacheHotData 测试热点数据保护（访问刷新 LRU 位置）
 func testCacheHotData(t *TestContext) {
 	c, _ := cache.NewLRUCache(5)
 	for i := 0; i < 5; i++ {
@@ -367,6 +382,7 @@ func testCacheHotData(t *TestContext) {
 	assertFalse(t, ok, "key-1 evicted (LRU)")
 }
 
+// testCacheDeleteFreesSpace 测试删除操作释放缓存空间
 func testCacheDeleteFreesSpace(t *TestContext) {
 	c, _ := cache.NewLRUCache(5)
 	for i := 0; i < 5; i++ {
@@ -390,6 +406,7 @@ func testCacheDeleteFreesSpace(t *TestContext) {
 // 一致性哈希环测试（7 用例）
 // ========================================================================
 
+// buildShardTests 构建一致性哈希模块的测试条目
 func buildShardTests() []TestEntry {
 	return []TestEntry{
 		{ID: "S01", Name: "哈希环构造函数", Category: "正常", Func: testShardNewHashRing},
@@ -402,6 +419,7 @@ func buildShardTests() []TestEntry {
 	}
 }
 
+// testShardNewHashRing 测试哈希环创建（正常和异常场景）
 func testShardNewHashRing(t *TestContext) {
 	r, err := shard.NewHashRing(100)
 	assertNoError(t, err, "NewHashRing(100)")
@@ -413,6 +431,7 @@ func testShardNewHashRing(t *TestContext) {
 	assertError(t, err, "negative virtual nodes")
 }
 
+// testShardAddNode 测试添加节点到哈希环
 func testShardAddNode(t *TestContext) {
 	r, _ := shard.NewHashRing(10)
 	assertNoError(t, r.AddNode("NodeA"), "AddNode NodeA")
@@ -425,6 +444,7 @@ func testShardAddNode(t *TestContext) {
 	assertError(t, r.AddNode(""), "empty ID")
 }
 
+// testShardRemoveNode 测试从哈希环移除节点
 func testShardRemoveNode(t *TestContext) {
 	r, _ := shard.NewHashRing(10)
 	r.AddNode("NodeA")
@@ -439,6 +459,7 @@ func testShardRemoveNode(t *TestContext) {
 	assertError(t, r.RemoveNode(""), "remove empty ID")
 }
 
+// testShardRoutingDeterminism 测试同一 Key 多次路由结果的一致性
 func testShardRoutingDeterminism(t *TestContext) {
 	r, _ := shard.NewHashRing(100)
 	r.AddNode("NodeA")
@@ -456,11 +477,13 @@ func testShardRoutingDeterminism(t *TestContext) {
 	}
 }
 
+// testShardEmptyRing 测试空环路由返回错误
 func testShardEmptyRing(t *TestContext) {
 	r, _ := shard.NewHashRing(10)
 	assertEqual(t, r.GetNode("any-key"), "", "empty ring returns empty")
 }
 
+// testShardDataDistribution 测试数据在多节点间的分布均衡性
 func testShardDataDistribution(t *TestContext) {
 	r, _ := shard.NewHashRing(100)
 	r.AddNode("Node-1")
@@ -497,6 +520,7 @@ func testShardDataDistribution(t *TestContext) {
 	}
 }
 
+// testShardRingIntegrity 测试哈希环完整性（虚拟节点数、单调性）
 func testShardRingIntegrity(t *TestContext) {
 	r, _ := shard.NewHashRing(100)
 	r.AddNode("Node-1")
@@ -553,6 +577,7 @@ func testShardRingIntegrity(t *TestContext) {
 // 缓存节点测试（6 用例）- 每个测试独立创建节点
 // ========================================================================
 
+// buildNodeTests 构建缓存节点模块的测试条目
 func buildNodeTests(cli *CLIClient) []TestEntry {
 	_ = cli // 不使用共享集群
 	return []TestEntry{
@@ -586,6 +611,7 @@ func createTestNode(t *TestContext, id string, cap int) *node.CacheNode {
 	return n
 }
 
+// testNodeCreateInit 测试节点创建、初始化与启动的状态变化
 func testNodeCreateInit(t *TestContext) {
 	// 创建后需要 Init+Start 才能变为 Running
 	n, err := node.NewCacheNode("test-init-node", 100)
@@ -609,6 +635,7 @@ func testNodeCreateInit(t *TestContext) {
 	assertError(t, err, "zero capacity")
 }
 
+// testNodeSetGetDelete 测试节点级别的 SET/GET/DELETE 操作
 func testNodeSetGetDelete(t *TestContext) {
 	n := createTestNode(t, "test-sgd", 100)
 	defer n.Stop()
@@ -625,6 +652,7 @@ func testNodeSetGetDelete(t *TestContext) {
 	}
 }
 
+// testNodeGetInfo 测试节点 GetInfo 返回的状态信息
 func testNodeGetInfo(t *TestContext) {
 	n := createTestNode(t, "test-info", 100)
 	defer n.Stop()
@@ -635,6 +663,7 @@ func testNodeGetInfo(t *TestContext) {
 	t.Logf("  Node %s info retrieved successfully", n.GetNodeID())
 }
 
+// testNodeStatus 测试节点在各阶段的状态转换
 func testNodeStatus(t *TestContext) {
 	n := createTestNode(t, "test-status", 100)
 	defer n.Stop()
@@ -651,6 +680,7 @@ func testNodeStatus(t *TestContext) {
 	assertEqual(t, n.GetStatus(), node.StatusSlave, "still Slave")
 }
 
+// testNodeExportAll 测试节点全量数据导出
 func testNodeExportAll(t *TestContext) {
 	n := createTestNode(t, "test-export", 100)
 	defer n.Stop()
@@ -667,6 +697,7 @@ func testNodeExportAll(t *TestContext) {
 	t.Logf("  Exported %d key-value pairs", len(keys))
 }
 
+// testNodeCapacity 测试节点容量管理和 LRU 淘汰
 func testNodeCapacity(t *TestContext) {
 	n := createTestNode(t, "cap-node", 100)
 	defer n.Stop()
@@ -684,6 +715,7 @@ func testNodeCapacity(t *TestContext) {
 // TCP 服务测试（9 用例）- 每个测试独立集群
 // ========================================================================
 
+// buildServerTests 构建 TCP 服务模块的测试条目
 func buildServerTests(cli *CLIClient) []TestEntry {
 	_ = cli
 	return []TestEntry{
@@ -699,6 +731,7 @@ func buildServerTests(cli *CLIClient) []TestEntry {
 	}
 }
 
+// testServerSETGET 测试通过 TCP 的 SET/GET 完整流程
 func testServerSETGET(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -720,6 +753,7 @@ func testServerSETGET(t *TestContext) {
 	assertEmptyValue(t, val, "nonexistent value")
 }
 
+// testServerDELETE 测试通过 TCP 的 DELETE 操作
 func testServerDELETE(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -737,6 +771,7 @@ func testServerDELETE(t *TestContext) {
 	assertEmptyValue(t, val, "value after DELETE")
 }
 
+// testServerINFO 测试通过 TCP 的 INFO 命令响应
 func testServerINFO(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -750,6 +785,7 @@ func testServerINFO(t *TestContext) {
 	t.Logf("  INFO response: %d bytes", len(val))
 }
 
+// testServerCompleteWorkflow 测试 SET→GET→DELETE→GET 完整工作流
 func testServerCompleteWorkflow(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -784,6 +820,7 @@ func testServerCompleteWorkflow(t *TestContext) {
 	assertValue(t, val, "Value2", "Key2 value")
 }
 
+// testServerInvalidCommand 测试非法命令码的错误处理
 func testServerInvalidCommand(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -799,6 +836,7 @@ func testServerInvalidCommand(t *TestContext) {
 	assertSuccess(t, status, "SET after invalid cmd")
 }
 
+// testServerMissingKey 测试缺少 Key 参数的错误处理
 func testServerMissingKey(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -818,6 +856,7 @@ func testServerMissingKey(t *TestContext) {
 	assertStatus(t, status, protocol.ERROR_INVALID_KEY, "DELETE empty key")
 }
 
+// testServerClientDisconnect 测试客户端断开后服务器稳定性
 func testServerClientDisconnect(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -833,6 +872,7 @@ func testServerClientDisconnect(t *TestContext) {
 	assertSuccess(t, status, "SET after disconnect")
 }
 
+// testServerConcurrent5 测试 5 个客户端并发操作
 func testServerConcurrent5(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -877,6 +917,7 @@ func testServerConcurrent5(t *TestContext) {
 	}
 }
 
+// testServerStress10 测试 10 个客户端压力测试
 func testServerStress10(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -954,6 +995,7 @@ func testServerStress10(t *TestContext) {
 // 主从复制测试（7 用例）- 每个测试独立集群
 // ========================================================================
 
+// buildReplicationTests 构建主从复制模块的测试条目
 func buildReplicationTests(cli *CLIClient) []TestEntry {
 	_ = cli
 	return []TestEntry{
@@ -967,6 +1009,7 @@ func buildReplicationTests(cli *CLIClient) []TestEntry {
 	}
 }
 
+// testRepSetMasterSlave 测试主从关系配置
 func testRepSetMasterSlave(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -983,6 +1026,7 @@ func testRepSetMasterSlave(t *TestContext) {
 	assertError(t, c.RC.SetMasterSlave("NonExistent", slave.GetNodeID()), "non-existent")
 }
 
+// testRepSyncToSlave 测试主节点写入数据同步到从节点
 func testRepSyncToSlave(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -999,6 +1043,7 @@ func testRepSyncToSlave(t *TestContext) {
 	assertTrue(t, c.RC.GetSyncedCount() >= 1, "sync count >= 1")
 }
 
+// testRepInitSync 测试初始全量同步
 func testRepInitSync(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -1008,6 +1053,7 @@ func testRepInitSync(t *TestContext) {
 	assertError(t, c.RC.InitSync("NonExistent"), "non-existent")
 }
 
+// testRepStateQuery 测试复制状态查询
 func testRepStateQuery(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -1033,6 +1079,7 @@ func testRepStateQuery(t *TestContext) {
 	}
 }
 
+// testRepSyncDelete 测试主节点删除同步到从节点
 func testRepSyncDelete(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -1055,6 +1102,7 @@ func testRepSyncDelete(t *TestContext) {
 	assertError(t, c.RC.SyncDeleteToSlave(""), "empty key")
 }
 
+// testRepFullSync 测试全量同步恢复（从节点清空后恢复）
 func testRepFullSync(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -1101,6 +1149,7 @@ func testRepFullSync(t *TestContext) {
 	assertNoError(t, c.RC.ApplyFullSync([]*protocol.ProtocolFrame{}), "empty frames")
 }
 
+// testRepConcurrentSync 测试并发同步安全性
 func testRepConcurrentSync(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -1148,6 +1197,7 @@ func testRepConcurrentSync(t *TestContext) {
 // 集成测试（3 用例）- 每个测试独立集群
 // ========================================================================
 
+// buildIntegrationTests 构建集成测试的测试条目
 func buildIntegrationTests(cli *CLIClient) []TestEntry {
 	_ = cli
 	return []TestEntry{
@@ -1157,6 +1207,7 @@ func buildIntegrationTests(cli *CLIClient) []TestEntry {
 	}
 }
 
+// testIntegTruncHeader 测试截断帧头发送后服务器稳定性
 func testIntegTruncHeader(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -1173,6 +1224,7 @@ func testIntegTruncHeader(t *TestContext) {
 	assertSuccess(t, status, "SET after truncated header")
 }
 
+// testIntegValidAfterTrunc 测试截断帧后仍可正常处理合法请求
 func testIntegValidAfterTrunc(t *TestContext) {
 	c := tempCluster(t)
 	defer stopCluster(c)
@@ -1195,6 +1247,7 @@ func testIntegValidAfterTrunc(t *TestContext) {
 	assertEqual(t, body[0], uint8(protocol.SUCCESS), "INFO status")
 }
 
+// testIntegOversizedValue 测试超大 Value 的边界处理
 func testIntegOversizedValue(t *TestContext) {
 	bigValue := make([]byte, protocol.MaxValueLength+1)
 	_, err := protocol.EncodeRequest(uint8(protocol.CMD_SET), []byte("k"), bigValue)

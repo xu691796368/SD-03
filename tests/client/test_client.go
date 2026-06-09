@@ -36,9 +36,9 @@ import (
 // TestClient TCP 客户端测试工具
 // 封装 TCP 连接和协议帧的发送/接收操作，提供类型安全的 API
 type TestClient struct {
-	conn    net.Conn
-	t       *testing.T
-	timeout time.Duration
+	conn    net.Conn      // TCP 连接
+	t       *testing.T    // 测试上下文
+	timeout time.Duration // 读写超时（0 表示不设超时）
 }
 
 // NewTestClient 创建并连接到指定地址的 TCP 测试客户端
@@ -229,12 +229,12 @@ func DefaultClusterOptions() TestClusterOption {
 // TestCluster 完整的测试集群
 // 包含哈希环、缓存节点、TCP 服务器、主从复制控制器
 type TestCluster struct {
-	Ring    *shard.HashRing
-	Nodes   []*node.CacheNode
-	Server  *server.TCPServer
-	RC      *replication.ReplicationController
-	Address string // 服务器实际监听地址
-	opts    TestClusterOption
+	Ring    *shard.HashRing                    // 一致性哈希环
+	Nodes   []*node.CacheNode                  // 缓存节点列表
+	Server  *server.TCPServer                  // TCP 服务器
+	RC      *replication.ReplicationController // 主从复制控制器
+	Address string                             // 服务器实际监听地址
+	opts    TestClusterOption                  // 集群配置选项
 }
 
 // NewTestCluster 创建并启动完整的测试集群
@@ -426,9 +426,9 @@ func AssertFalse(t *testing.T, condition bool, msg string) {
 
 // ConcurrentResult 并发测试结果
 type ConcurrentResult struct {
-	ClientID int
-	OpIndex  int
-	Err      error
+	ClientID int   // 客户端编号
+	OpIndex  int   // 操作序号
+	Err      error // 操作错误（nil 表示成功）
 }
 
 // RunConcurrentTest 并发测试执行器
@@ -495,8 +495,8 @@ type TestResult struct {
 
 // ReportWriter 报告写入器
 type ReportWriter struct {
-	report TestReport
-	mu     sync.Mutex
+	report TestReport // 测试报告数据
+	mu     sync.Mutex // 并发安全锁
 }
 
 // NewReportWriter 创建新的报告写入器

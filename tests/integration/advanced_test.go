@@ -36,11 +36,11 @@ import (
 // smallCluster 小型测试集群，用于 LRU 淘汰等需要精确控制缓存容量的场景
 // 与 testCluster（Task 3.7）的区别：节点数量和缓存容量可自定义
 type smallCluster struct {
-	ring    *shard.HashRing
-	nodes   []*node.CacheNode
-	server  *server.TCPServer
-	rc      *replication.ReplicationController
-	address string
+	ring    *shard.HashRing                    // 一致性哈希环
+	nodes   []*node.CacheNode                  // 缓存节点列表
+	server  *server.TCPServer                  // TCP 服务器
+	rc      *replication.ReplicationController // 主从复制控制器
+	address string                             // 服务器实际监听地址
 }
 
 // newSmallCluster 创建小型测试集群
@@ -95,6 +95,7 @@ func newSmallCluster(t *testing.T, numNodes, capacity int) *smallCluster {
 	}
 }
 
+// stop 关闭小型测试集群，释放所有资源
 func (sc *smallCluster) stop(t *testing.T) {
 	t.Helper()
 	if err := sc.server.Stop(); err != nil {
@@ -107,6 +108,7 @@ func (sc *smallCluster) stop(t *testing.T) {
 	}
 }
 
+// connect 创建到小型测试集群服务器的 TCP 连接
 func (sc *smallCluster) connect(t *testing.T) net.Conn {
 	t.Helper()
 	conn, err := net.DialTimeout("tcp", sc.address, 5*time.Second)

@@ -166,6 +166,7 @@ func (cli *CLIClient) executeFreeModeCommand(cmd string, args []string) bool {
 // 连接管理命令
 // ========================================================================
 
+// handleConnect 处理 connect 命令，创建新的 TCP 连接
 func (cli *CLIClient) handleConnect(args []string) {
 	addr := ""
 	if len(args) > 0 {
@@ -184,6 +185,7 @@ func (cli *CLIClient) handleConnect(args []string) {
 	fmt.Printf("  [+] 连接 #%d 已创建 -> %s (当前活跃)\n", connID, actual)
 }
 
+// handleDisconnect 处理 disconnect 命令，关闭指定或当前活跃连接
 func (cli *CLIClient) handleDisconnect(args []string) {
 	id := cli.activeConn
 	if len(args) > 0 {
@@ -201,6 +203,7 @@ func (cli *CLIClient) handleDisconnect(args []string) {
 	fmt.Printf("  [+] 连接 #%d 已断开\n", id)
 }
 
+// handleUse 处理 use 命令，切换活跃连接
 func (cli *CLIClient) handleUse(args []string) {
 	if len(args) == 0 {
 		fmt.Println("  [!] 用法: use <连接ID>")
@@ -219,6 +222,7 @@ func (cli *CLIClient) handleUse(args []string) {
 	fmt.Printf("  [+] 已切换到连接 #%d\n", id)
 }
 
+// handleList 处理 list 命令，列出所有 TCP 连接状态
 func (cli *CLIClient) handleList() {
 	if len(cli.connections) == 0 {
 		fmt.Println("  (无活跃连接)")
@@ -241,6 +245,7 @@ func (cli *CLIClient) handleList() {
 // 缓存操作命令
 // ========================================================================
 
+// handleSet 处理 set 命令，向服务器发送 SET 请求
 func (cli *CLIClient) handleSet(args []string) {
 	if len(args) < 2 {
 		fmt.Println("  [!] 用法: set <key> <value>")
@@ -268,6 +273,7 @@ func (cli *CLIClient) handleSet(args []string) {
 	}
 }
 
+// handleGet 处理 get 命令，向服务器发送 GET 请求
 func (cli *CLIClient) handleGet(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: get <key>")
@@ -296,6 +302,7 @@ func (cli *CLIClient) handleGet(args []string) {
 	}
 }
 
+// handleDelete 处理 delete 命令，向服务器发送 DELETE 请求
 func (cli *CLIClient) handleDelete(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: delete <key>")
@@ -323,6 +330,7 @@ func (cli *CLIClient) handleDelete(args []string) {
 	}
 }
 
+// handleInfo 处理 info 命令，获取并展示服务器信息
 func (cli *CLIClient) handleInfo() {
 	conn, err := cli.GetActiveConn()
 	if err != nil {
@@ -354,6 +362,7 @@ func (cli *CLIClient) handleInfo() {
 // 主从同步命令
 // ========================================================================
 
+// handleSync 处理 sync 命令，配置主从复制关系
 func (cli *CLIClient) handleSync(args []string) {
 	if len(args) < 2 {
 		fmt.Println("  [!] 用法: sync <masterID> <slaveID>")
@@ -373,6 +382,7 @@ func (cli *CLIClient) handleSync(args []string) {
 	fmt.Printf("  [+] 主从关系已配置: Master=%s, Slave=%s\n", masterID, slaveID)
 }
 
+// handleSyncSet 处理 sync-set 命令，主节点 SET 并同步到从节点
 func (cli *CLIClient) handleSyncSet(args []string) {
 	if len(args) < 2 {
 		fmt.Println("  [!] 用法: sync-set <key> <value>")
@@ -407,6 +417,7 @@ func (cli *CLIClient) handleSyncSet(args []string) {
 	fmt.Printf("  [+] sync-set OK: %s = %s (已同步到从节点)\n", key, value)
 }
 
+// handleSyncDel 处理 sync-del 命令，主节点 DELETE 并同步到从节点
 func (cli *CLIClient) handleSyncDel(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: sync-del <key>")
@@ -424,6 +435,7 @@ func (cli *CLIClient) handleSyncDel(args []string) {
 	fmt.Printf("  [+] sync-del OK: %s (已同步删除到从节点)\n", key)
 }
 
+// handleFullSync 处理 full-sync 命令，执行全量同步
 func (cli *CLIClient) handleFullSync(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: full-sync <masterID>")
@@ -444,6 +456,7 @@ func (cli *CLIClient) handleFullSync(args []string) {
 	fmt.Printf("  [+] 全量同步完成: %d 条数据已同步\n", len(frames))
 }
 
+// handleSyncStatus 处理 sync-status 命令，查询并展示复制状态
 func (cli *CLIClient) handleSyncStatus() {
 	if cli.cluster == nil {
 		fmt.Println("  [!] 集群未启动")
@@ -467,6 +480,7 @@ func (cli *CLIClient) handleSyncStatus() {
 // 批量操作命令
 // ========================================================================
 
+// handleBatchSet 处理 batch-set 命令，批量 SET 数据
 func (cli *CLIClient) handleBatchSet(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: batch-set <count> [prefix]")
@@ -507,6 +521,7 @@ func (cli *CLIClient) handleBatchSet(args []string) {
 		success, count, duration.Round(time.Millisecond), float64(success)/duration.Seconds())
 }
 
+// handleBatchGet 处理 batch-get 命令，批量 GET 验证数据
 func (cli *CLIClient) handleBatchGet(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: batch-get <count> [prefix]")
@@ -549,6 +564,7 @@ func (cli *CLIClient) handleBatchGet(args []string) {
 		hit, miss, duration.Round(time.Millisecond), float64(count)/duration.Seconds())
 }
 
+// handleBatchDel 处理 batch-del 命令，批量 DELETE 数据
 func (cli *CLIClient) handleBatchDel(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: batch-del <count> [prefix]")
@@ -592,6 +608,7 @@ func (cli *CLIClient) handleBatchDel(args []string) {
 // 路由与节点信息
 // ========================================================================
 
+// handleRoute 处理 route 命令，查看 Key 路由到的目标节点
 func (cli *CLIClient) handleRoute(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: route <key>")
@@ -606,6 +623,7 @@ func (cli *CLIClient) handleRoute(args []string) {
 	fmt.Printf("  Key '%s' -> 路由到节点: %s\n", key, nodeID)
 }
 
+// handleNodes 处理 nodes 命令，查看所有缓存节点信息
 func (cli *CLIClient) handleNodes() {
 	if cli.cluster == nil {
 		fmt.Println("  [!] 集群未启动")
@@ -619,6 +637,7 @@ func (cli *CLIClient) handleNodes() {
 	}
 }
 
+// handleRingInfo 处理 ring-info 命令，查看哈希环详细信息
 func (cli *CLIClient) handleRingInfo() {
 	if cli.cluster == nil {
 		fmt.Println("  [!] 集群未启动")
@@ -638,6 +657,7 @@ func (cli *CLIClient) handleRingInfo() {
 // 测试场景命令
 // ========================================================================
 
+// handleLRUEvict 处理 lru-evict 命令，创建指定容量的集群测试 LRU 淘汰
 func (cli *CLIClient) handleLRUEvict(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: lru-evict <capacity>")
@@ -683,6 +703,7 @@ func (cli *CLIClient) handleLRUEvict(args []string) {
 	n2.Stop()
 }
 
+// handleStress 处理 stress 命令，执行多客户端并发压力测试
 func (cli *CLIClient) handleStress(args []string) {
 	if len(args) < 2 {
 		fmt.Println("  [!] 用法: stress <clients> <ops>")
@@ -760,6 +781,7 @@ func (cli *CLIClient) handleStress(args []string) {
 	fmt.Printf("      吞吐量: %.0f ops/s\n", float64(successCount)/duration.Seconds())
 }
 
+// handleRaw 处理 raw 命令，发送原始十六进制字节到服务器
 func (cli *CLIClient) handleRaw(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: raw <hex_bytes>")
