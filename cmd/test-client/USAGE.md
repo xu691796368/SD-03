@@ -233,13 +233,17 @@ free:1> lru-evict 5               # 容量5的LRU淘汰演示
 ### 原始协议帧测试
 
 ```bash
-free:1> raw 0104000000036b6579    # 发送 GET key 原始帧
-  [+] 已发送 9 字节: 0104000000036b6579
-  [+] 响应 10 字节: ...
+free:1> raw 0100000003000000006b6579    # 发送 GET key 原始帧
+  [i] 帧解析: Cmd=0x01(GET)  KeyLen=3  ValueLen=0  期望总长=12字节
+  [+] 已发送 12 字节: 0100000003000000006b6579
+  [+] 响应 10 字节: 01000000000000000100
+      Cmd=0x01(GET)  Status=0x00(SUCCESS)
+      Value(0字节):
 
 # 协议帧格式:
 # Command(1B) + KeyLen(4B, big-endian) + ValueLen(4B, big-endian) + Key + Value
-# 01=GET, 00000003=keylen=3, 00000000=vallen=0, 6b6579="key"
+# GET key: 01 | 00000003(keylen=3) | 00000000(vallen=0) | 6b6579("key")  = 12字节
+# SET key val: 02 | 00000003 | 00000003 | 6b6579 | 76616c  = 15字节
 ```
 
 ### 查看使用示例
@@ -338,7 +342,7 @@ free:1> back                      # 返回主菜单
 cmd/test-client/
 ├── main.go              # 入口程序，菜单导航
 ├── test_client.go       # 核心框架（TestContext、CLIClient、断言、报告）
-├── auto_tests.go        # 46个测试用例实现
+├── auto_tests.go        # 51个测试用例实现
 ├── test_descriptions.go # 测试用例描述（前置场景、过程、验证）
 ├── free_mode.go         # 自由测试命令 + 客户端设置
 └── USAGE.md             # 本文档

@@ -4,7 +4,20 @@
 
 ## 文档目录
 
-### 1. 需求规格（Specifications）
+### 1. 项目提案（Proposal）
+
+**[proposal.md](./proposal/proposal.md)** - 分布式缓存系统项目提案
+- 项目背景和学习目标
+- 总体目标和具体功能目标
+- 功能范围和技术约束
+- 验收标准和测试结果
+- 技术栈和项目结构
+- 风险评估和进度计划
+- 参考资料
+
+---
+
+### 2. 需求规格（Specifications）
 
 **[specs.md](./specs/specs.md)** - 缓存系统功能场景规格说明
 - 定义了5个核心功能模块的功能场景
@@ -18,7 +31,7 @@
 
 ---
 
-### 2. 设计文档（Design）
+### 3. 设计文档（Design）
 
 **[design.md](./design/design.md)** - 分布式缓存系统设计文档
 - 架构概览：客户端→协议编解码→TCP服务器→一致性哈希→缓存节点→主从复制
@@ -29,14 +42,14 @@
 
 **关键设计决策**：
 - 大端字节序（Big-Endian）用于协议编解码
-- 自定义双向链表实现LRU算法
+- 使用 Go 标准库 container/list 实现LRU算法
 - Go 1.26.4作为开发环境要求
 
 **对应任务文档**：[tasks/tasks.md](./tasks/tasks.md)
 
 ---
 
-### 3. 任务文档（Tasks）
+### 4. 任务文档（Tasks）
 
 **[tasks.md](./tasks/tasks.md)** - 开发任务分解
 - Phase 1：基础架构（6个任务）
@@ -51,6 +64,27 @@
 - 确保测试覆盖率>60%
 
 **对应设计文档**：[design/design.md](./design/design.md)
+
+---
+
+### 5. 过程回顾（Review）
+
+**[sdd_review.md](./sdd_review.md)** - SDD 完整过程回顾文档
+- SDD（场景驱动开发）全流程回顾
+- 遇到的挑战与解决方案（协议编解码、LRU并发、哈希分布、TCP并发、测试隔离）
+- 技术决策与设计权衡分析
+- AI 使用心得与最佳实践
+- 经验教训与改进方向
+
+---
+
+### 6. 快速开始指南
+
+**[QUICK_START.md](../QUICK_START.md)** - 系统快速使用指南
+- 快速启动缓存服务器
+- 快速启动CLI测试客户端
+- 常用测试命令说明
+- 性能指标参考
 
 ---
 
@@ -88,21 +122,60 @@
 ## 文档关系图
 
 ```
-proposal.md (项目提案)
+README.md (项目主README)
     │
-    ├── 关联文档 ───────> docs/specs/specs.md (需求规格)
-                          │
-                          ├── 对应 design/design.md (设计文档)
-                          │   ├── 架构概览
-                          │   ├── 模块划分
-                          │   ├── 数据模型
-                          │   └── 接口定义
-                          │
-                          └── 对应 tasks/tasks.md (任务文档)
-                              ├── Phase 1: 基础架构 (6任务)
-                              ├── Phase 2: 核心功能 (7任务)
-                              ├── Phase 3: 测试与优化 (11任务)
-                              └── Phase 4: 验收与交付 (1任务)
+    ├── proposal.md (项目提案)
+    │   ├── 关联文档 ───────> docs/specs/specs.md (需求规格)
+    │   │                    │
+    │   │                    ├── 对应 design/design.md (设计文档)
+    │   │                    │   ├── 架构概览
+    │   │                    │   ├── 模块划分
+    │   │                    │   ├── 数据模型
+    │   │                    │   └── 接口定义
+    │   │                    │
+    │   │                    └── 对应 tasks/tasks.md (任务文档)
+    │   │                        ├── Phase 1: 基础架构 (6任务)
+    │   │                        ├── Phase 2: 核心功能 (7任务)
+    │   │                        ├── Phase 3: 测试与优化 (11任务)
+    │   │                        └── Phase 4: 验收与交付 (1任务)
+    │   │
+    │   ├── sdd_review.md (SDD评审文档)
+    │   │    └── SDD全流程回顾与经验总结
+    │   │
+    │   ├── QUICK_START.md (快速开始指南)
+    │   │    └── 快速启动与使用说明
+    │
+    ├── docs/specs/specs.md (需求规格)
+    │
+    ├── docs/design/design.md (设计文档)
+    │
+    ├── docs/tasks/tasks.md (任务文档)
+    │
+    ├── docs/sdd_review.md (SDD评审文档)
+    │
+    ├── cmd/test-client/USAGE.md (CLI客户端使用指南)
+    │
+    └── AI工具使用/ (AI工具使用记录)
+```
+
+**项目代码结构图**：
+
+```
+SD-03/
+├── cmd/ (主程序入口)
+│   ├── cache-server/ (缓存服务器)
+│   └── test-client/ (CLI测试客户端)
+├── pkg/ (核心代码)
+│   ├── cache/ (LRU缓存)
+│   ├── protocol/ (协议编解码)
+│   ├── shard/ (一致性哈希)
+│   ├── node/ (缓存节点)
+│   ├── server/ (TCP服务器)
+│   └── replication/ (主从复制)
+├── tests/ (测试文件)
+│   ├── client/ (测试客户端工具)
+│   └── integration/ (集成测试)
+└── test_results/ (测试结果报告)
 ```
 
 ---
@@ -111,32 +184,41 @@ proposal.md (项目提案)
 
 ### 初次了解项目
 1. 阅读 [README.md](../README.md) - 项目主README
-2. 阅读 [proposal.md](../proposal.md) - 项目提案（背景、目标、范围）
+2. 阅读 [docs/proposal/proposal.md](./proposal/proposal.md) - 项目提案（背景、目标、范围）
+
+### 快速上手
+3. 阅读 [QUICK_START.md](../QUICK_START.md) - 系统快速使用指南
+4. 阅读 [cmd/test-client/USAGE.md](../cmd/test-client/USAGE.md) - CLI测试客户端使用指南
 
 ### 深入了解需求
-3. 阅读 [docs/specs/specs.md](./specs/specs.md) - 功能场景规格
-4. 对照 [docs/design/design.md](./design/design.md) - 设计文档
+5. 阅读 [docs/specs/specs.md](./specs/specs.md) - 功能场景规格
+6. 对照 [docs/design/design.md](./design/design.md) - 设计文档
 
 ### 开始开发
-5. 阅读 [docs/design/design.md](./design/design.md) - 架构和接口设计
-6. 阅读 [docs/tasks/tasks.md](./tasks/tasks.md) - 任务分解和验收标准
-7. 参考 [pkg/](../pkg/) - 代码实现
+7. 阅读 [docs/design/design.md](./design/design.md) - 架构和接口设计
+8. 阅读 [docs/tasks/tasks.md](./tasks/tasks.md) - 任务分解和验收标准
+9. 参考 [pkg/](../pkg/) - 代码实现
 
 ### 完成开发
-8. 编写代码（遵循 [docs/design/design.md](./design/design.md) 的接口定义）
-9. 编写测试（遵循 [docs/tasks/tasks.md](./tasks/tasks.md) 的测试任务）
-10. 执行验收（对照 [docs/specs/specs.md](./specs/specs.md) 的验收标准）
+10. 编写代码（遵循 [docs/design/design.md](./design/design.md) 的接口定义）
+11. 编写测试（遵循 [docs/tasks/tasks.md](./tasks/tasks.md) 的测试任务）
+12. 执行验收（对照 [docs/specs/specs.md](./specs/specs.md) 的验收标准）
+
+### 学习回顾
+13. 阅读 [docs/sdd_review.md](./sdd_review.md) - SDD完整过程回顾
+14. 参考 [AI工具使用/](../AI工具使用/) - AI使用记录与经验总结
 
 ---
 
 ## 文档版本
 
-- **proposal.md**: v4.0
+- **proposal.md**: v4.1
 - **specs.md**: v2.0
 - **design.md**: v2.0
 - **tasks.md**: v3.0
-- **docs/README.md**: v2.0
+- **docs/README.md**: v3.0
+- **README.md**: v1.1
 
 **创建日期**: 2026-06-06
-**最后更新**: 2026-06-09
+**最后更新**: 2026-06-22
 **维护者**: SD-03项目组

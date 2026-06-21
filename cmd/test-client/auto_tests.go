@@ -1,5 +1,5 @@
 // Package main - auto_tests.go
-// 简易测试模块：46 个测试用例覆盖 7 大模块
+// 简易测试模块：51 个测试用例覆盖 7 大模块（含 8 个集成测试：5 正常 + 3 边界）
 // 每个测试函数签名 func(t *TestContext)，使用 assertXxx 断言
 // 需要集群的测试各自创建独立临时集群，确保测试隔离
 package main
@@ -1194,16 +1194,220 @@ func testRepConcurrentSync(t *TestContext) {
 }
 
 // ========================================================================
-// 集成测试（3 用例）- 每个测试独立集群
+// 集成测试（8 用例）- 正常场景 + 边界场景，每个测试独立集群
 // ========================================================================
 
 // buildIntegrationTests 构建集成测试的测试条目
 func buildIntegrationTests(cli *CLIClient) []TestEntry {
 	_ = cli
 	return []TestEntry{
+		// 正常场景：端到端全链路验证
+		{ID: "I04", Name: "SET/GET端到端集成", Category: "正常", Func: testIntegSETGET},
+		{ID: "I05", Name: "完整读写删工作流", Category: "正常", Func: testIntegCompleteWorkflow},
+		{ID: "I06", Name: "多客户端并发集成", Category: "正常", Func: testIntegMultiClient},
+		{ID: "I07", Name: "主从写同步集成", Category: "正常", Func: testIntegMasterSlaveSync},
+		{ID: "I08", Name: "主从全量同步集成", Category: "正常", Func: testIntegMasterSlaveFullSync},
+		// 边界场景：协议帧异常与容量边界
 		{ID: "I01", Name: "截断帧头处理", Category: "边界", Func: testIntegTruncHeader},
 		{ID: "I02", Name: "截断后合法帧验证", Category: "边界", Func: testIntegValidAfterTrunc},
 		{ID: "I03", Name: "超大Value拒绝", Category: "边界", Func: testIntegOversizedValue},
+	}
+}
+
+// ========================================================================
+// 正常场景集成测试（参考 tests/integration/integration_test.go）
+// ========================================================================
+
+// testIntegSETGET 测试 SET/GET 通过完整 TCP 协议栈的端到端正确性
+// 对应 specs.md 集成测试场景 "完整的缓存读写流程" 的基础验证
+func testIntegSETGET(t *TestContext) {
+	c := tempCluster(t)
+	defer stopCluster(c)
+	conn := dialTest(t, c.Address)
+	defer conn.Close()
+
+	// SET integ-key1 = integ-val1
+	status, _, err := sendTCPRequest(conn, uint8(protocol.CMD_SET), []byte("integ-key1"), []byte("integ-val1"))
+	assertNoError(t, err, "SET integ-key1")
+	assertSuccess(t, status, "SET integ-key1 status")
+
+	// GET integ-key1 → integ-val1
+	status, val, err := sendTCPRequest(conn, uint8(protocol.CMD_GET), []byte("integ-key1"), nil)
+	assertNoError(t, err, "GET integ-key1")
+	assertSuccess(t, status, "GET integ-key1 status")
+	assertValue(t, val, "integ-val1", "GET integ-key1 value")
+
+	// GET 不存在的 key → 空值
+	status, val, err = sendTCPRequest(conn, uint8(protocol.CMD_GET), []byte("integ-nonexistent"), nil)
+	assertNoError(t, err, "GET nonexistent")
+	assertSuccess(t, status, "GET nonexistent status")
+	assertEmptyValue(t, val, "nonexistent value")
+
+	// INFO 命令验证服务器状态返回
+	status, val, err = sendTCPRequest(conn, uint8(protocol.CMD_INFO), []byte{}, nil)
+	assertNoError(t, err, "INFO")
+	assertSuccess(t, status, "INFO status")
+	assertTrue(t, len(val) > 0, "INFO returns data")
+}
+
+// testIntegCompleteWorkflow 测试 SET→GET→SET→GET→DELETE→GET 完整工作流
+// 对应 specs.md 第6节 "集成测试场景 - 完整的缓存读写流程"
+func testIntegCompleteWorkflow(t *TestContext) {
+	c := tempCluster(t)
+	defer stopCluster(c)
+	conn := dialTest(t, c.Address)
+	defer conn.Close()
+
+	// Step1: SET Key1=Value1
+	status, _, err := sendTCPRequest(conn, uint8(protocol.CMD_SET), []byte("wf-Key1"), []byte("wf-Value1"))
+	assertNoError(t, err, "SET wf-Key1")
+	assertSuccess(t, status, "SET wf-Key1")
+
+	// Step2: GET Key1 → Value1
+	status, val, err := sendTCPRequest(conn, uint8(protocol.CMD_GET), []byte("wf-Key1"), nil)
+	assertNoError(t, err, "GET wf-Key1")
+	assertSuccess(t, status, "GET wf-Key1")
+	assertValue(t, val, "wf-Value1", "wf-Key1 value")
+
+	// Step3: SET Key2=Value2
+	status, _, err = sendTCPRequest(conn, uint8(protocol.CMD_SET), []byte("wf-Key2"), []byte("wf-Value2"))
+	assertNoError(t, err, "SET wf-Key2")
+	assertSuccess(t, status, "SET wf-Key2")
+
+	// Step4: GET Key2 → Value2
+	status, val, err = sendTCPRequest(conn, uint8(protocol.CMD_GET), []byte("wf-Key2"), nil)
+	assertNoError(t, err, "GET wf-Key2")
+	assertSuccess(t, status, "GET wf-Key2")
+	assertValue(t, val, "wf-Value2", "wf-Key2 value")
+
+	// Step5: DELETE Key1
+	status, _, err = sendTCPRequest(conn, uint8(protocol.CMD_DELETE), []byte("wf-Key1"), nil)
+	assertNoError(t, err, "DELETE wf-Key1")
+	assertSuccess(t, status, "DELETE wf-Key1")
+
+	// Step6: GET Key1 → 空（已删除）
+	status, val, err = sendTCPRequest(conn, uint8(protocol.CMD_GET), []byte("wf-Key1"), nil)
+	assertNoError(t, err, "GET wf-Key1 after DELETE")
+	assertSuccess(t, status, "GET wf-Key1 after DELETE")
+	assertEmptyValue(t, val, "wf-Key1 after DELETE")
+
+	// 验证 Key2 仍然存在（数据一致性）
+	status, val, err = sendTCPRequest(conn, uint8(protocol.CMD_GET), []byte("wf-Key2"), nil)
+	assertNoError(t, err, "GET wf-Key2 verify")
+	assertSuccess(t, status, "GET wf-Key2 verify")
+	assertValue(t, val, "wf-Value2", "wf-Key2 still exists")
+}
+
+// testIntegMultiClient 测试多客户端并发 SET/GET 端到端集成
+// 对应 specs.md TCP服务器场景 "多客户端并发连接"
+func testIntegMultiClient(t *TestContext) {
+	c := tempCluster(t)
+	defer stopCluster(c)
+
+	const numClients = 5
+	const opsPerClient = 10
+	var wg sync.WaitGroup
+	errCh := make(chan error, numClients*opsPerClient*2)
+
+	for i := 0; i < numClients; i++ {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			conn, err := net.DialTimeout("tcp", c.Address, 5*time.Second)
+			if err != nil {
+				errCh <- fmt.Errorf("client %d: connect: %v", id, err)
+				return
+			}
+			defer conn.Close()
+
+			for j := 0; j < opsPerClient; j++ {
+				key := fmt.Sprintf("integ-mc-%d-%d", id, j)
+				value := fmt.Sprintf("integ-mv-%d-%d", id, j)
+
+				// SET
+				status, _, err := sendTCPRequest(conn, uint8(protocol.CMD_SET), []byte(key), []byte(value))
+				if err != nil || status != uint8(protocol.SUCCESS) {
+					errCh <- fmt.Errorf("client %d SET %s: err=%v status=0x%02X", id, key, err, status)
+					return
+				}
+				// GET 验证
+				status, respVal, err := sendTCPRequest(conn, uint8(protocol.CMD_GET), []byte(key), nil)
+				if err != nil || string(respVal) != value {
+					errCh <- fmt.Errorf("client %d GET %s: err=%v expected='%s' got='%s'", id, key, err, value, string(respVal))
+					return
+				}
+			}
+		}(i)
+	}
+	wg.Wait()
+	close(errCh)
+	for err := range errCh {
+		t.Error(err)
+	}
+	if !t.Failed() {
+		t.Logf("[PASS] Multi-client: %d clients x %d ops", numClients, opsPerClient)
+	}
+}
+
+// testIntegMasterSlaveSync 测试主从写同步端到端集成
+// 对应 specs.md 主从复制场景 "主从同步正常工作"
+func testIntegMasterSlaveSync(t *TestContext) {
+	c := tempCluster(t)
+	defer stopCluster(c)
+	master := c.Nodes[0]
+	slave := c.Nodes[1]
+
+	// 配置主从关系
+	assertNoError(t, c.RC.SetMasterSlave(master.GetNodeID(), slave.GetNodeID()), "SetMasterSlave")
+	assertEqual(t, master.GetStatus(), node.StatusMaster, "master status")
+	assertEqual(t, slave.GetStatus(), node.StatusSlave, "slave status")
+
+	// 主节点写入并同步
+	assertNoError(t, master.Set("integ-sync-key", []byte("integ-sync-val")), "master SET")
+	assertNoError(t, c.RC.SyncToSlave("integ-sync-key", []byte("integ-sync-val")), "SyncToSlave")
+
+	// 验证从节点数据一致性
+	val, err := slave.Get("integ-sync-key")
+	assertNoError(t, err, "slave GET")
+	assertValue(t, val, "integ-sync-val", "slave value")
+	assertTrue(t, c.RC.GetSyncedCount() >= 1, "sync count >= 1")
+}
+
+// testIntegMasterSlaveFullSync 测试主从全量同步恢复集成
+// 对应 specs.md 主从复制场景 "从节点断开重连后恢复同步"
+func testIntegMasterSlaveFullSync(t *TestContext) {
+	c := tempCluster(t)
+	defer stopCluster(c)
+	master := c.Nodes[0]
+	slave := c.Nodes[1]
+	c.RC.SetMasterSlave(master.GetNodeID(), slave.GetNodeID())
+
+	// 主节点写入 50 条数据
+	const dataCount = 50
+	for i := 0; i < dataCount; i++ {
+		key := fmt.Sprintf("integ-full-%02d", i)
+		value := fmt.Sprintf("integ-fval-%02d", i)
+		assertNoError(t, master.Set(key, []byte(value)), "master SET")
+	}
+
+	// 验证主节点数据量
+	assertEqual(t, master.Size(), dataCount, "master size")
+
+	// 从节点请求全量同步
+	frames, err := c.RC.RequestFullSync(master.GetNodeID())
+	assertNoError(t, err, "RequestFullSync")
+	assertEqual(t, len(frames), dataCount, "full sync frames")
+
+	// 应用全量同步到从节点
+	assertNoError(t, c.RC.ApplyFullSync(frames), "ApplyFullSync")
+	assertEqual(t, slave.Size(), master.Size(), "size match after sync")
+
+	// 逐条验证从节点数据一致性
+	for i := 0; i < dataCount; i++ {
+		key := fmt.Sprintf("integ-full-%02d", i)
+		expected := fmt.Sprintf("integ-fval-%02d", i)
+		val, _ := slave.Get(key)
+		assertValue(t, val, expected, fmt.Sprintf("slave data %s", key))
 	}
 }
 

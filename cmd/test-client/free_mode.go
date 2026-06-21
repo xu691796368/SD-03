@@ -782,10 +782,15 @@ func (cli *CLIClient) handleStress(args []string) {
 }
 
 // handleRaw 处理 raw 命令，发送原始十六进制字节到服务器
+// 帧格式: Command(1B) + KeyLen(4B big-endian) + ValueLen(4B big-endian) + Key + Value
 func (cli *CLIClient) handleRaw(args []string) {
 	if len(args) < 1 {
 		fmt.Println("  [!] 用法: raw <hex_bytes>")
-		fmt.Println("      例: raw 0104000000036b6579  (GET key)")
+		fmt.Println("      帧格式: Command(1B) + KeyLen(4B) + ValueLen(4B) + Key + Value")
+		fmt.Println("      例: raw 0100000003000000006b6579              (GET key, 12字节)")
+		fmt.Println("      例: raw 0200000003000000036b657976616c        (SET key val, 15字节)")
+		fmt.Println("      例: raw 0300000003000000006b6579              (DELETE key, 12字节)")
+		fmt.Println("      例: raw 040000000000000000                    (INFO, 9字节)")
 		return
 	}
 	hexStr := strings.Join(args, "")
@@ -795,6 +800,30 @@ func (cli *CLIClient) handleRaw(args []string) {
 		return
 	}
 
+	// ---- 帧格式校验 ----
+	if len(data) < protocol.FrameHeaderSize {
+		fmt.Printf("  [!] 数据过短: %d 字节，帧头至少需要 %d 字节 (Command+KeyLen+ValueLen)\n",
+			len(data), protocol.FrameHeaderSize)
+		return
+	}
+
+	cmd := data[0]
+	keyLen := binary.BigEndian.Uint32(data[1:5])
+	valLen := binary.BigEndian.Uint32(data[5:9])
+	expectedSize := int(protocol.FrameHeaderSize) + int(keyLen) + int(valLen)
+	cmdName := protocol.Command(cmd).String()
+
+	fmt.Printf("  [i] 帧解析: Cmd=0x%02X(%s)  KeyLen=%d  ValueLen=%d  期望总长=%d字节\n",
+		cmd, cmdName, keyLen, valLen, expectedSize)
+
+	if len(data) != expectedSize {
+		fmt.Printf("  [!] 帧长度不匹配: 实际 %d 字节 ≠ 期望 %d 字节 (头部9 + Key(%d) + Value(%d))\n",
+			len(data), expectedSize, keyLen, valLen)
+		fmt.Println("      服务端会因等待剩余数据而阻塞，请检查 hex 是否完整")
+		return
+	}
+
+	// ---- 发送帧 ----
 	conn, err2 := cli.GetActiveConn()
 	if err2 != nil {
 		fmt.Printf("  [!] %v\n", err2)
@@ -808,16 +837,61 @@ func (cli *CLIClient) handleRaw(args []string) {
 	}
 	fmt.Printf("  [+] 已发送 %d 字节: %x\n", n, data)
 
-	// 尝试读取响应
-	buf := make([]byte, 4096)
-	conn.Conn.SetReadDeadline(time.Now().Add(2 * time.Second))
-	rn, err := conn.Conn.Read(buf)
-	conn.Conn.SetReadDeadline(time.Time{})
-	if err != nil {
-		fmt.Printf("  [!] 读取响应失败: %v\n", err)
+	// ---- 读取响应帧 ----
+	// 响应帧格式: Command(1B) + KeyLen(4B,恒为0) + ValueLen(4B) + Status(1B) + Value
+	conn.Conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	defer conn.Conn.SetReadDeadline(time.Time{})
+
+	// 先读9字节响应头部
+	respHeader := make([]byte, protocol.FrameHeaderSize)
+	if _, err := io.ReadFull(conn.Conn, respHeader); err != nil {
+		fmt.Printf("  [!] 读取响应头失败: %v\n", err)
 		return
 	}
-	fmt.Printf("  [+] 响应 %d 字节: %x\n", rn, buf[:rn])
+	respValLen := binary.BigEndian.Uint32(respHeader[5:9])
+
+	// 读响应体: Status(1B) + Value(ValueLen)
+	bodySize := 1 + int(respValLen)
+	if bodySize > 10*1024*1024 { // 安全限制 10MB
+		fmt.Printf("  [!] 响应体过大: %d 字节，拒绝读取\n", bodySize)
+		return
+	}
+	respBody := make([]byte, bodySize)
+	if bodySize > 0 {
+		if _, err := io.ReadFull(conn.Conn, respBody); err != nil {
+			fmt.Printf("  [!] 读取响应体失败: %v\n", err)
+			return
+		}
+	}
+
+	// 解析并展示响应
+	respCmd := respHeader[0]
+	status := uint8(0)
+	value := []byte{}
+	if len(respBody) > 0 {
+		status = respBody[0]
+		value = respBody[1:]
+	}
+
+	totalResp := protocol.FrameHeaderSize + bodySize
+	fmt.Printf("  [+] 响应 %d 字节: %x\n", totalResp, append(respHeader, respBody...))
+	fmt.Printf("      Cmd=0x%02X(%s)  Status=0x%02X(%s)\n",
+		respCmd, protocol.Command(respCmd).String(), status, protocol.ErrorCode(status).String())
+	if len(value) > 0 {
+		// 尝试以可读文本展示
+		printable := true
+		for _, b := range value {
+			if b < 0x20 || b > 0x7e {
+				printable = false
+				break
+			}
+		}
+		if printable {
+			fmt.Printf("      Value(%d字节): %s\n", len(value), string(value))
+		} else {
+			fmt.Printf("      Value(%d字节): %x\n", len(value), value)
+		}
+	}
 }
 
 // ========================================================================
@@ -971,9 +1045,12 @@ func ShowUsageExamples() {
 	fmt.Println("  ┌─────────────────────────────────────────────────────────┐")
 	fmt.Println("  │ 示例7: 原始协议帧测试                                   │")
 	fmt.Println("  └─────────────────────────────────────────────────────────┘")
-	fmt.Println("    raw 0104000000036b6579    # 发送GET key的原始帧")
-	fmt.Println("    # 帧格式: Command(1B)+KeyLen(4B)+ValueLen(4B)+Data")
-	fmt.Println("    # 01=GET, 00000003=keylen=3, 00000000=vallen=0, 6b6579=\"key\"")
+	fmt.Println("    raw 0100000003000000006b6579            # GET key (12字节)")
+	fmt.Println("    raw 0200000003000000036b657976616c      # SET key val (15字节)")
+	fmt.Println("    raw 040000000000000000                  # INFO (9字节)")
+	fmt.Println("    # 帧格式: Command(1B)+KeyLen(4B big-endian)+ValueLen(4B big-endian)+Key+Value")
+	fmt.Println("    # 01=GET 02=SET 03=DELETE 04=INFO")
+	fmt.Println("    # GET key: 01 | 00000003(keylen=3) | 00000000(vallen=0) | 6b6579(\"key\")")
 	fmt.Println()
 	fmt.Println("  提示: 所有命令不区分大小写（命令部分），参数区分大小写")
 	fmt.Println("============================================================")
