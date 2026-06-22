@@ -68,7 +68,8 @@ SD-03/
 ├── test_results/                    # 测试结果报告（按阶段组织）
 │   ├── phase1_basic/                # Phase 1 基础架构测试结果
 │   ├── phase2_implementation/       # Phase 2 核心功能测试结果
-│   └── phase3_testing/              # Phase 3 测试验证结果
+│   ├── phase3_testing/              # Phase 3 测试验证结果
+|   └── 客户端测试结果截图             # 客户端CLI工具测试结果截图
 ├── docs/                            # 项目文档
 │   ├── README.md                    # 文档索引
 │   ├── design/                      # 设计文档
@@ -79,7 +80,7 @@ SD-03/
 │   │   └── specs.md                 # 需求规格说明
 │   ├── tasks/                       # 任务分解
 │   │   └── tasks.md                 # 任务分解文档
-│   ├── sdd_review.md                # SDD评审文档
+│   ├── sdd_review.md                # SDD回顾文档
 │   └── QUICK_START.md               # 快速开始指南
 ├── go.mod
 ├── QUICK_START.md
@@ -160,7 +161,7 @@ go test ./...
 2. [需求规格](./docs/specs/specs.md) - 功能场景和验收标准
 3. [设计文档](./docs/design/design.md) - 架构和接口设计
 4. [任务列表](./docs/tasks/tasks.md) - 开发任务分解
-5. [SDD评审文档](./docs/sdd_review.md) - 系统设计文档评审
+5. [SDD回顾文档](./docs/sdd_review.md) - 系统设计回顾
 
 ## 代码规范
 
@@ -218,7 +219,7 @@ go test ./...
 - [docs/design/design.md](./docs/design/design.md) - 系统设计文档
 - [docs/specs/specs.md](./docs/specs/specs.md) - 需求规格说明
 - [docs/tasks/tasks.md](./docs/tasks/tasks.md) - 任务分解文档
-- [docs/sdd_review.md](./docs/sdd_review.md) - SDD评审文档
+- [docs/sdd_review.md](./docs/sdd_review.md) - SDD回顾文档
 - [cmd/test-client/USAGE.md](./cmd/test-client/USAGE.md) - CLI测试客户端详细使用指南
 
 ## 许可证

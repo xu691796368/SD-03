@@ -139,7 +139,7 @@ README.md (项目主README)
     │   │                        ├── Phase 3: 测试与优化 (11任务)
     │   │                        └── Phase 4: 验收与交付 (1任务)
     │   │
-    │   ├── sdd_review.md (SDD评审文档)
+    │   ├── sdd_review.md (SDD回顾文档)
     │   │    └── SDD全流程回顾与经验总结
     │   │
     │   ├── QUICK_START.md (快速开始指南)
@@ -151,7 +151,7 @@ README.md (项目主README)
     │
     ├── docs/tasks/tasks.md (任务文档)
     │
-    ├── docs/sdd_review.md (SDD评审文档)
+    ├── docs/sdd_review.md (SDD回顾文档)
     │
     ├── cmd/test-client/USAGE.md (CLI客户端使用指南)
     │
